@@ -32,6 +32,6 @@ use of the Project Oxford APIs from Python.
 See submodules for information about the available API sets.
 '''
 
-__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
+__author__ = "Microsoft Corporation <python@microsoft.com>"
 __version__ = "0.3.0"
 
