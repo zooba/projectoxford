@@ -9,11 +9,8 @@ from warnings import warn
 from distutils.core import setup, Extension
 from distutils.command.build_ext import build_ext
 
-long_description = (
-    'Microsoft Project Oxford is a collection of artificial intelligence tools ' +
-    'made available as online services. This library provides easy use of the ' +
-    'Project Oxford APIs from Python.'
-)
+with open('README', 'r', encoding='utf-8') as f:
+    long_description = f.read()
 
 classifiers = [
     'Development Status :: 3 - Alpha',
