@@ -7,6 +7,8 @@ Microsoft Project Oxford is a collection of artificial intelligence tools made a
 
 Currently only the speech recognition, synthesis and [LUIS](https://luis.ai/) APIs are implemented.
 
+If you were using the previous version of this library, which only provided the vision APIs, install ``projectoxford<=0.2`` to continue to use that version.
+
 Installation
 ------------
 
