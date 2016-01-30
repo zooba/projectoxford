@@ -7,7 +7,7 @@
 import os
 from warnings import warn
 from distutils.core import setup, Extension
-from distutils.command.build_ext import build_ext
+from Cython.Build import cythonize
 
 with open('README', 'r', encoding='utf-8') as f:
     long_description = f.read()
@@ -39,6 +39,7 @@ setup_cfg = dict(
     author_email='python@microsoft.com',
     url='http://github.com/zooba/projectoxford',
     packages=['projectoxford', 'projectoxford.tests'],
+    ext_modules=cythonize('projectoxford/_audio_win32.pyx'),
     classifiers=classifiers,
 )
 

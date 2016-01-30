@@ -18,231 +18,42 @@ import wave
 
 from io import BytesIO
 
-__all__ = ['play', 'record', 'get_quiet_threshold']
+__all__ = ['play', 'record', 'get_quiet_threshold',
+           'get_playback_devices', 'get_recording_devices']
 
 if sys.platform == 'win32':
-    import ctypes
-    import ctypes.wintypes
-    import _winapi
-
-    HWAVEOUT = HWAVEIN = ctypes.wintypes.HANDLE
-
-    class MMRESULT(ctypes.wintypes.DWORD):
-        def _check_restype_(self):
-            if self:
-                raise OSError('error using audio device: {:x}'.format(self))
-
-    WAVE_MAPPER = ctypes.wintypes.UINT(-1)
-    WAVE_ALLOWSYNC = 0x00000002
-    CALLBACK_EVENT = 0x00050000
-
-    class WAVEFORMATEX(ctypes.Structure):
-        _fields_ = [
-            ('wFormatTag', ctypes.wintypes.WORD),
-            ('nChannels', ctypes.wintypes.WORD),
-            ('nSamplesPerSec', ctypes.wintypes.DWORD),
-            ('nAvgBytesPerSec', ctypes.wintypes.DWORD),
-            ('nBlockAlign', ctypes.wintypes.WORD),
-            ('wBitsPerSample', ctypes.wintypes.WORD),
-            ('cbSize', ctypes.wintypes.WORD),
-        ]
-
-    class WAVEHDR(ctypes.Structure): pass
-    LPWAVEHDR = ctypes.POINTER(WAVEHDR)
-    WAVEHDR._fields_ = [
-        ('lpData', ctypes.wintypes.LPSTR),
-        ('dwBufferLength', ctypes.wintypes.DWORD),
-        ('dwBytesRecorded', ctypes.wintypes.DWORD),
-        ('dwUser', ctypes.c_void_p),
-        ('dwFlags', ctypes.wintypes.DWORD),
-        ('dwLoops', ctypes.wintypes.DWORD),
-        ('lpNext', LPWAVEHDR),
-        ('reserved', ctypes.c_void_p),
-    ]
-
-    winmm = ctypes.WinDLL("winmm.dll")
-
-    waveOutOpen = winmm.waveOutOpen
-    waveOutOpen.argtypes = [
-        ctypes.POINTER(HWAVEOUT),
-        ctypes.wintypes.UINT,
-        ctypes.POINTER(WAVEFORMATEX),
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-        ctypes.wintypes.DWORD,
-    ]
-    waveOutOpen.restype = MMRESULT
-
-    waveOutPrepareHeader = winmm.waveOutPrepareHeader
-    waveOutPrepareHeader.argtypes = [HWAVEOUT, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveOutPrepareHeader.restype = MMRESULT
-
-    waveOutUnprepareHeader = winmm.waveOutUnprepareHeader
-    waveOutUnprepareHeader.argtypes = [HWAVEOUT, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveOutUnprepareHeader.restype = MMRESULT
-
-    waveOutWrite = winmm.waveOutWrite
-    waveOutWrite.argtypes = [HWAVEOUT, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveOutWrite.restype = MMRESULT
-
-    waveOutClose = winmm.waveOutClose
-    waveOutClose.argtypes = [HWAVEOUT]
-    waveOutClose.restype = MMRESULT
-
-    waveInOpen = winmm.waveInOpen
-    waveInOpen.argtypes = [
-        ctypes.POINTER(HWAVEIN),
-        ctypes.wintypes.UINT,
-        ctypes.POINTER(WAVEFORMATEX),
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-        ctypes.wintypes.DWORD,
-    ]
-    waveInOpen.restype = MMRESULT
-
-    waveInPrepareHeader = winmm.waveInPrepareHeader
-    waveInPrepareHeader.argtypes = [HWAVEIN, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveInPrepareHeader.restype = MMRESULT
-
-    waveInUnprepareHeader = winmm.waveInUnprepareHeader
-    waveInUnprepareHeader.argtypes = [HWAVEIN, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveInUnprepareHeader.restype = MMRESULT
-
-    waveInAddBuffer = winmm.waveInAddBuffer
-    waveInAddBuffer.argtypes = [HWAVEIN, LPWAVEHDR, ctypes.wintypes.UINT]
-    waveInAddBuffer.restype = MMRESULT
-
-    waveInStart = winmm.waveInStart
-    waveInStart.argtypes = [HWAVEIN]
-    waveInStart.restype = MMRESULT
-
-    waveInStop = winmm.waveInStop
-    waveInStop.argtypes = [HWAVEIN]
-    waveInStop.restype = MMRESULT
-
-    waveInClose = winmm.waveInClose
-    waveInClose.argtypes = [HWAVEIN]
-    waveInClose.restype = MMRESULT
-
-    kernel32 = ctypes.WinDLL("kernel32.dll")
-
-    CreateEventW = kernel32.CreateEventW
-    CreateEventW.argtypes = [ctypes.c_void_p, ctypes.wintypes.BOOL, ctypes.wintypes.BOOL, ctypes.wintypes.LPCWSTR]
-    CreateEventW.restype = ctypes.wintypes.HANDLE
-
-    CloseHandle = kernel32.CloseHandle
-    CloseHandle.argtypes = [ctypes.wintypes.HANDLE]
-
-    WaitForSingleObject = kernel32.WaitForSingleObject
-    WaitForSingleObject.argtypes = [ctypes.wintypes.HANDLE, ctypes.wintypes.DWORD]
-    WaitForSingleObject.restype = ctypes.wintypes.DWORD
-
-    def _make_wave_format(wav):
-        return WAVEFORMATEX(
-            wFormatTag=1, # only support PCM
-            nChannels=wav.getnchannels(),
-            nSamplesPerSec=wav.getframerate(),
-            nAvgBytesPerSec=wav.getsampwidth() * wav.getnchannels() * wav.getframerate(),
-            nBlockAlign=wav.getsampwidth() * wav.getnchannels(),
-            wBitsPerSample=wav.getsampwidth() * 8,
-            cbSize=0,
-        )
-
-    def _play(wav):
-        evt = CreateEventW(None, True, False, None)
-
-        try:
-            fmt = _make_wave_format(wav)
-            handle = HWAVEOUT()
-            waveOutOpen(
-                ctypes.byref(handle),
-                WAVE_MAPPER,
-                ctypes.byref(fmt),
-                evt,
-                None,
-                WAVE_ALLOWSYNC | (CALLBACK_EVENT if evt else 0)
-            )
-
-            try:
-                # TODO: Use smaller buffers and read repeatedly to handle large files
-                data = wav.readframes(wav.getnframes())
-                hdr = WAVEHDR(lpData=data, dwBufferLength=len(data))
-                waveOutPrepareHeader(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                waveOutWrite(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-
-                # Wait for notifications from the playback
-                while WaitForSingleObject(evt, 500) == 0 and (hdr.dwFlags & 1) == 0:
-                    pass
-
-                waveOutUnprepareHeader(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-            finally:
-                waveOutClose(handle)
-        finally:
-            CloseHandle(evt)
-
-    def _record(wav, seconds_per_chunk, on_chunk):
-        fmt = _make_wave_format(wav)
-        bytes_per_sec = wav.getsampwidth() * wav.getframerate() * wav.getnchannels()
-
-        try:
-            should_skip = on_chunk.should_skip
-        except AttributeError:
-            should_skip = None
-
-        evt = CreateEventW(None, True, False, None)
-        try:
-            handle = HWAVEIN()
-            waveInOpen(
-                ctypes.byref(handle),
-                WAVE_MAPPER,
-                ctypes.byref(fmt),
-                evt,
-                None,
-                CALLBACK_EVENT
-            )
-
-            try:
-                buffer = ctypes.create_string_buffer(int(bytes_per_sec * seconds_per_chunk))
-                hdr = WAVEHDR(lpData=ctypes.cast(buffer, ctypes.c_char_p), dwBufferLength=len(buffer))
-                back_buffer = ctypes.create_string_buffer(int(bytes_per_sec * seconds_per_chunk))
-                back_hdr = WAVEHDR(lpData=ctypes.cast(back_buffer, ctypes.c_char_p), dwBufferLength=len(back_buffer))
-
-                waveInStart(handle)
-                try:
-                    waveInPrepareHeader(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                    waveInAddBuffer(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                    waveInPrepareHeader(handle, ctypes.byref(back_hdr), ctypes.sizeof(back_hdr))
-                    waveInAddBuffer(handle, ctypes.byref(back_hdr), ctypes.sizeof(back_hdr))
-
-                    while True:
-                        # Wait for notifications from the playback
-                        while WaitForSingleObject(evt, 500) == 0:
-                            if (hdr.dwFlags & 1) == 1:
-                                break
-
-                        heard = buffer.raw[:hdr.dwBytesRecorded]
-                        if not should_skip or not should_skip(heard):
-                            wav.writeframes(heard)
-                            if on_chunk(heard):
-                                wav.close()
-                                return
-
-                        waveInUnprepareHeader(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                        waveInPrepareHeader(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                        waveInAddBuffer(handle, ctypes.byref(hdr), ctypes.sizeof(hdr))
-                        hdr, buffer, back_hdr, back_buffer = back_hdr, back_buffer, hdr, buffer
-                finally:
-                    waveInStop(handle)
-            finally:
-                waveInClose(handle)
-        finally:
-            CloseHandle(evt)
+    from ._audio_win32 import _get_playback_devices, PlaybackDevice
+    from ._audio_win32 import _get_recording_devices, RecordingDevice
+    
+    def _play(device_id, wav):
+        with contextlib.closing(PlaybackDevice(
+            device_id,
+            wav.getnchannels(),
+            wav.getframerate(),
+            wav.getsampwidth(),
+        )) as pd:
+            pd.play(lambda: wav.readframes(wav.getframerate() // 2))
+    
+    def _record(device_id, wav, seconds_per_chunk, on_chunk):
+        with contextlib.closing(RecordingDevice(
+            device_id,
+            wav.getnchannels(),
+            wav.getframerate(),
+            wav.getsampwidth(),
+        )) as rd:
+            rd.record(int(seconds_per_chunk * wav.getframerate()), on_chunk)
 
 else:
-    def _play(wav):
+    def _get_playback_devices():
+        return []
+
+    def _play(device_id, wav):
         raise NotImplementedError('play is not implemented for platform {}'.format(sys.platform))
 
-    def _record(wav, seconds_per_chunk, on_chunk):
+    def _get_recording_devices():
+        return []
+
+    def _record(device_id, wav, seconds_per_chunk, on_chunk):
         raise NotImplementedError('record is not implemented for platform {}'.format(sys.platform))
 
 @contextlib.contextmanager
@@ -265,20 +76,46 @@ def _open_wav(wav):
     yield w
     w.close()
 
-def play(wav):
-    '''Plays a wave file using the user's default playback device.
+def get_playback_devices():
+    '''Returns a list of available playback devices.
+    
+    Each item is a tuple of a display name and a unique identifier.
+    Pass the identifier to `play` to specify the device.
+    
+    The first item, if any, is the recommended default.
+    '''
+    return _get_playback_devices()
+
+def get_recording_devices():
+    '''Returns a list of available recording devices.
+    
+    Each item is a tuple of a display name and a unique identifier.
+    Pass the identifier to `record` to specify the device.
+    
+    The first item, if any, is the recommended default.
+    '''
+    return _get_recording_devices()
+
+def play(wav, device_id=None):
+    '''Plays a wave file using a playback device.
     The function will block until playback is complete.
 
     wav:
         An open `wave.Wave_read` object, a `bytes` object containing
         a wave file, or a valid argument to `wave.open`.
+    device_id:
+        The device to play over. Defaults to the first available.
     '''
+    if device_id is None:
+        device_id = get_playback_devices()[0][1]
+    
     with _open_wav(wav) as w:
-        return _play(w)
+        return _play(device_id, w)
 
 class _RecordStatus(object):
     def __init__(
         self,
+        target_wav,
         bits_per_sample,
         sample_rate,
         quiet_threshold,
@@ -287,6 +124,7 @@ class _RecordStatus(object):
         lstrip_quiet=True,
         on_call=None
     ):
+        self.target_wav = target_wav
         self.max_seconds = max_seconds
         self.max_quiet_seconds = max_quiet_seconds
         self.seconds = 0
@@ -314,29 +152,31 @@ class _RecordStatus(object):
         mean_square = sum((d / 32768) ** 2 for d in arr) / len(arr)
         return mean_square < self.quiet_threshold ** 2
 
-    def should_skip(self, chunk):
-        if self.lstrip_quiet:
-            if self.is_quiet(chunk):
-                return True
-            self.lstrip_quiet = False
-
     def __call__(self, chunk):
         if self.on_call:
             self.on_call(chunk)
 
+        if self.lstrip_quiet:
+            if self.is_quiet(chunk):
+                return True
+            self.lstrip_quiet = False
+        
+        if self.target_wav:
+            self.target_wav.writeframes(chunk)
+
         s = len(chunk) / self.bytes_per_second
         self.seconds += s
         if self.max_seconds > 0 and self.seconds >= self.max_seconds:
-            return True
+            return False
 
         if self.max_quiet_seconds <= 0:
-            return False
+            return True
 
         if self.is_quiet(chunk):
             self.quiet_seconds += s
         else:
             self.quiet_seconds = 0
-        return self.quiet_seconds >= self.max_quiet_seconds
+        return self.quiet_seconds < self.max_quiet_seconds
 
 
 def record(
@@ -349,7 +189,8 @@ def record(
     quiet_threshold=0.005,
     seconds_per_chunk=0.5,
     wait_for_sound=True,
-    on_chunk=None
+    on_chunk=None,
+    device_id=None,
 ):
     '''Records a short period of audio into the provided wave file or
     a newly created buffer using the user's default recording device.
@@ -394,7 +235,13 @@ def record(
         Optional callback to be invoked on the raw data recorded each
         chunk. This callback should return within `seconds_per_chunk`
         seconds to avoid recording failures.
+    device_id:
+        The device to record using. If omitted, defaults to the first
+        available recording device.
     '''
+    if device_id is None:
+        device_id = get_playback_devices()[0][1]
+
     if wav:
         result = None
         channels = wav.getnchannels()
@@ -408,6 +255,7 @@ def record(
         wav.setsampwidth(bits_per_sample // 8)
 
     _on_chunk = _RecordStatus(
+        wav,
         bits_per_sample,
         sample_rate,
         quiet_threshold,
@@ -417,7 +265,7 @@ def record(
         on_chunk
     )
     try:
-        _record(wav, seconds_per_chunk, _on_chunk)
+        _record(device_id, wav, seconds_per_chunk, _on_chunk)
     finally:
         if result:
             wav.close()
