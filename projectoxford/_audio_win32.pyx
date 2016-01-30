@@ -149,21 +149,21 @@ def _get_recording_devices():
     return devs
 
 
-cdef void hdr_in_prepare_add(HWAVEIN hw, WAVEHDR* w) nogil:
+cdef void hdr_in_prepare_add(HWAVEIN hw, WAVEHDR* w):
     with nogil:
         check_mmr_in(waveInPrepareHeader(hw, w, sizeof(WAVEHDR)), "prepare audio buffer")
         check_mmr_in(waveInAddBuffer(hw, w, sizeof(WAVEHDR)), "add audio buffer")
 
-cdef void hdr_in_unprepare(HWAVEIN hw, WAVEHDR* w) nogil:
+cdef void hdr_in_unprepare(HWAVEIN hw, WAVEHDR* w):
     with nogil:
         check_mmr_in(waveInUnprepareHeader(hw, w, sizeof(WAVEHDR)), "unprepare audio buffer")
 
-cdef void hdr_out_prepare_write(HWAVEOUT hw, WAVEHDR* w) nogil:
+cdef void hdr_out_prepare_write(HWAVEOUT hw, WAVEHDR* w):
     with nogil:
         check_mmr_out(waveOutPrepareHeader(hw, w, sizeof(WAVEHDR)), "prepare audio data")
         check_mmr_out(waveOutWrite(hw, w, sizeof(WAVEHDR)), "write audio data")
 
-cdef void hdr_out_unprepare(HWAVEOUT hw, WAVEHDR* w) nogil:
+cdef void hdr_out_unprepare(HWAVEOUT hw, WAVEHDR* w):
     with nogil:
         check_mmr_out(waveOutUnprepareHeader(hw, w, sizeof(WAVEHDR)), "unprepare audio buffer")
 
@@ -233,8 +233,7 @@ cdef class PlaybackDevice:
         pnext_hdr.lpData = data
         pnext_hdr.dwBufferLength = len(data)
         
-        with nogil:
-            hdr_out_prepare_write(hw, pnext_hdr)
+        hdr_out_prepare_write(hw, pnext_hdr)
         
         exit = False
         while not exit:
@@ -249,7 +248,7 @@ cdef class PlaybackDevice:
                 if not success:
                     with nogil:
                         check_mmr_out(waveOutReset(hw), "reset audio device")
-                        hdr_out_unprepare(hw, phdr)
+                    hdr_out_unprepare(hw, phdr)
             if data:
                 pnext_hdr.lpData = data
                 pnext_hdr.dwBufferLength = len(data)
@@ -359,7 +358,7 @@ cdef class RecordingDevice:
                         another = False
                         with nogil:
                             check_mmr_in(waveInReset(hw), "reset audio device")
-                            hdr_in_unprepare(hw, pnext_hdr)
+                        hdr_in_unprepare(hw, pnext_hdr)
                 phdr, pnext_hdr = pnext_hdr, phdr
                 data1, data2 = data2, data1
         finally:
