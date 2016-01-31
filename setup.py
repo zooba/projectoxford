@@ -5,7 +5,8 @@
 # Distributed under the terms of the MIT License
 #-------------------------------------------------------------------------
 import os
-from warnings import warn
+import setuptools
+
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
