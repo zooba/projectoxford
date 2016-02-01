@@ -33,7 +33,7 @@ classifiers = [
 
 setup_cfg = dict(
     name='projectoxford',
-    version='0.3.0',
+    version='0.3.2',
     description='Python module for using Project Oxford APIs',
     long_description=long_description,
     author='Microsoft Corporation',
@@ -41,6 +41,7 @@ setup_cfg = dict(
     url='http://github.com/zooba/projectoxford',
     packages=['projectoxford', 'projectoxford.tests'],
     ext_modules=cythonize('projectoxford/_audio_win32.pyx'),
+    install_requires=['requests'],
     classifiers=classifiers,
 )
 
