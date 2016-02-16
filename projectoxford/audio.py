@@ -273,7 +273,7 @@ def record(
     if result:
         return result.getvalue()
 
-def get_quiet_threshold(sample_rate=11025, bits_per_sample=8):
+def get_quiet_threshold(sample_rate=11025, bits_per_sample=8, device_id=None):
     '''Records a short period of time and calculates the RMS volume
     of the clip. This is the same calculation that is used in `record`
     as `quiet_threshold` to determine when silence is being recorded.
@@ -285,16 +285,17 @@ def get_quiet_threshold(sample_rate=11025, bits_per_sample=8):
         Number of bits of information to record each sample. Must
         be either 8 or 16.
     '''
+    if device_id is None:
+        device_id = get_playback_devices()[0][1]
+
     rms = [1.0]
     if bits_per_sample == 8:
         def on_chunk(data):
             rms[0] = math.sqrt(sum(((d - 128) / 256) ** 2 for d in data) / len(data))
-            return True
     elif bits_per_sample == 16:
         def on_chunk(data):
             arr = array.array('h', data)
             rms[0] = math.sqrt(sum((d / 32768) ** 2 for d in arr) / len(arr))
-            return True
     else:
         raise ValueError('cannot record {} bits per sample'.format(bits_per_sample))
 
@@ -302,5 +303,5 @@ def get_quiet_threshold(sample_rate=11025, bits_per_sample=8):
         wav.setnchannels(1)
         wav.setframerate(sample_rate)
         wav.setsampwidth(bits_per_sample // 8)
-        _record(wav, 0.5, on_chunk)
+        _record(device_id, wav, 0.5, on_chunk)
     return rms[0]
