@@ -5,8 +5,8 @@ import time, requests, cv2, operator
 import matplotlib.pyplot as plt
 import numpy as np
 
-from emotion.utils import image_to_binary
-from emotion.variables import EMOTION_ENDPOINT, MAX_NUM_RETRIES
+from .utils import image_to_binary
+from .variables import EMOTION_ENDPOINT, MAX_NUM_RETRIES
 
 
 class EmotionClient:

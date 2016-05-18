@@ -23,7 +23,7 @@ This library is in an early stage of development. We strongly recommend pinning 
 Getting Started
 ---------------
 
-To use text to speech or speech recognition, you'll need to [obtain a subscription key](https://projectoxford.ai/speech). 
+To use text to speech or speech recognition, you'll need to [obtain a subscription key](https://projectoxford.ai/speech).
 
 ```python
 from projectoxford.speech import SpeechClient
