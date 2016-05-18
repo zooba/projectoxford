@@ -9,7 +9,13 @@ Currently only the speech recognition, synthesis and [LUIS](https://luis.ai/) AP
 
 If you were using the previous version of this library, which only provided the vision APIs, install ``projectoxford<=0.2`` to continue to use that version.
 
-Installation
+# Table of Contents
+1. [Installation](#installation)
+2. [Speech API](#speech-api)
+3. [Emotion API](#emotion-api)
+
+
+## Installation
 ------------
 
 To install, use pip:
@@ -20,7 +26,7 @@ pip install projectoxford
 
 This library is in an early stage of development. We strongly recommend pinning all references to the specific version you are using.
 
-Getting Started
+## Speech API
 ---------------
 
 To use text to speech or speech recognition, you'll need to [obtain a subscription key](https://projectoxford.ai/speech).
@@ -81,6 +87,27 @@ data = record(seconds=5, quiet_seconds=0, wait_for_sound=False)
 ```
 
 Use `help(record)` to review other arguments.
+
+
+## Emotion API
+---------------
+
+This API analyzes faces to detect a range of feelings in an image. To use emotion APIs, you'll need to [obtain a subscription key](https://www.projectoxford.ai/emotion).
+
+### Requirements
+In order to run this API properly you need to have Numpy, OpenCV, Matplotlib packages installed.
+
+
+### Usage
+```python
+from projectoxford.emotion.api import EmotionClient
+ec = EmotionClient('YOUR-EMOTION-API-KEY-GOES-HERE')
+# For local images:
+ec.process_image('/path/to/image', local=True)
+# For remote images:
+ec.process_image('http://example.com/path/to/image.png', local=False)
+```
+
 
 Contributing
 ------------
