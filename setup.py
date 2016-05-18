@@ -5,6 +5,7 @@
 # Distributed under the terms of the MIT License
 #-------------------------------------------------------------------------
 import os
+import platform
 import setuptools
 
 from distutils.core import setup, Extension
@@ -40,7 +41,7 @@ setup_cfg = dict(
     author_email='python@microsoft.com',
     url='http://github.com/zooba/projectoxford',
     packages=['projectoxford', 'projectoxford.tests'],
-    ext_modules=cythonize('projectoxford/_audio_win32.pyx'),
+    ext_modules=cythonize('projectoxford/_audio_win32.pyx') if platform.system()=='Windows' else None,
     install_requires=['requests'],
     classifiers=classifiers,
 )
