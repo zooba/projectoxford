@@ -95,7 +95,12 @@ Use `help(record)` to review other arguments.
 This API analyzes faces to detect a range of feelings in an image. To use emotion APIs, you'll need to [obtain a subscription key](https://www.projectoxford.ai/emotion).
 
 ### Requirements
-In order to run this API properly you need to have Numpy, OpenCV, Matplotlib packages installed.
+In order to run this API properly you need to have these packages installed:
+```
+numpy
+matplotlib
+OpenCV (cv2)
+```
 
 
 ### Usage
