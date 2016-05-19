@@ -78,13 +78,14 @@ class EmotionClient:
             cv2.putText(img, textToWrite, (faceRectangle['left'],faceRectangle['top']-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1)
 
 
-    def process_image(self, img_path, local=True):
+    def process_image(self, img_path, local=True, show=False):
         """
             Processes emotions in image.
 
             Parameters:
                 img_path: Path to target image either in local form '/path/to/image' or remote form 'http://path/to/image.jpg'
                 local: Boolean flag to determine whether image is in local storage or not. Default is set to True (local).
+                show: Boolean flag. If set JSON response is not returned and processed image is shown.
         """
 
         assert img_path is not None and isinstance(img_path, str), 'Image path should be a valid string.'
@@ -92,10 +93,10 @@ class EmotionClient:
 
         headers = dict()
         headers['Ocp-Apim-Subscription-Key'] = self.key
-        self._process_local_image(headers, img_path) if local else self._process_remote_image(headers, img_path)
+        return self._process_local_image(headers, img_path, show) if local else self._process_remote_image(headers, img_path, show)
 
 
-    def _process_local_image(self, headers, img_path):
+    def _process_local_image(self, headers, img_path, show):
         """
             Processes emotions in local image.
         """
@@ -103,10 +104,11 @@ class EmotionClient:
         headers['Content-Type'] = 'application/octet-stream'
         binary = image_to_binary(img_path)
         result = self._processRequest(None, binary, headers)
+        if not show:
+            return result
         self._show(result, bytearray(binary))
 
-
-    def _process_remote_image(self, headers, img_url):
+    def _process_remote_image(self, headers, img_url, show):
         """
             Processes emotions in remote image.
         """
@@ -114,6 +116,8 @@ class EmotionClient:
         headers['Content-Type'] = 'application/json'
         json = {'url': img_url}
         result = self._processRequest(json, None, headers)
+        if not show:
+            return result
         self._show(result, bytearray(requests.get(img_url).content))
 
 
