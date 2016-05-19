@@ -95,7 +95,7 @@ Use `help(record)` to review other arguments.
 This API analyzes faces to detect a range of feelings in an image. To use emotion APIs, you'll need to [obtain a subscription key](https://www.projectoxford.ai/emotion).
 
 ### Requirements
-In order to run this API properly you need to have these packages installed:
+In order to render emotions on image "emotion_result.render_emotion()" you need to have these packages installed:
 ```
 numpy
 matplotlib
@@ -105,16 +105,19 @@ OpenCV (cv2)
 
 ### Usage
 ```python
-from projectoxford.emotion.api import EmotionClient
-ec = EmotionClient('YOUR-EMOTION-API-KEY-GOES-HERE')
+>>> from projectoxford.emotion.api import EmotionClient
+>>> ec = EmotionClient('YOUR-EMOTION-API-KEY-GOES-HERE')
 # For local images:
-ec.process_image('/path/to/image', local=True, show=False)
+>>> er = ec.process_image_from_path('/path/to/image')
 # For remote images:
-ec.process_image('http://example.com/path/to/image.png', local=False, show=False)
-# Result:
-# >>> [{'scores': {'disgust': 1.65423147e-10, 'neutral': 2.67820988e-09, 'surprise': 4.2763566e-09, 'fear': 6.918734e-11, 'happiness': 1.0, 'sadness': 4.156868e-09, 'anger': 3.50509538e-10, 'contempt': 4.948203e-10}, 'faceRectangle': {'left': 216, 'width': 141, 'top': 143, 'height': 141}}, {'scores': {'disgust': 0.000125725681, 'neutral': 0.5974805, 'surprise': 0.1454401, 'fear': 0.05481965, 'happiness': 0.000100017438, 'sadness': 0.2018231, 'anger': 7.945149e-05, 'contempt': 0.000131502544}, 'faceRectangle': {'left': 378, 'width': 139, 'top': 239, 'height': 139}}]
+>>> er = ec.process_image_from_url('http://example.com/path/to/image')
+>>> er.get_raw_result()
+>>> [{'scores': {'disgust': 1.65423147e-10, 'neutral': 2.67820988e-09, 'surprise': 4.2763566e-09, 'fear': 6.918734e-11, 'happiness': 1.0, 'sadness': 4.156868e-09, 'anger': 3.50509538e-10, 'contempt': 4.948203e-10}, 'faceRectangle': {'left': 216, 'width': 141, 'top': 143, 'height': 141}}, {'scores': {'disgust': 0.000125725681, 'neutral': 0.5974805, 'surprise': 0.1454401, 'fear': 0.05481965, 'happiness': 0.000100017438, 'sadness': 0.2018231, 'anger': 7.945149e-05, 'contempt': 0.000131502544}, 'faceRectangle': {'left': 378, 'width': 139, 'top': 239, 'height': 139}}]
+>>> er.get_strongest_emotion()
+>>> ['happiness', 'neutral']
+>>> er.render_emotion()
+# Renders emotions on image and shows them.
 ```
-If you want to show the processed image and not get the JSON response set 'show=True'.
 
 
 Contributing
