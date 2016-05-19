@@ -1,12 +1,25 @@
 # Main functionality is from:
 #   https://github.com/Microsoft/ProjectOxford-ClientSDK/blob/master/Emotion/Python/Jupyter%20Notebook/Emotion%20Analysis%20Example.ipynb
 
+# -------------------------------------------------------------------------
+#   Moeen Zamani
+#   Distributed under the terms of the MIT License
+# -------------------------------------------------------------------------
+
+'''Project Oxford Speech Module
+
+This module provides access to the Project Oxford speech APIs.
+
+See https://www.projectoxford.ai/speech to obtain an API key.
+'''
+
 import time, requests, cv2, operator
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .utils import image_to_binary
 from .variables import EMOTION_ENDPOINT, MAX_NUM_RETRIES
+
 
 
 class EmotionClient:

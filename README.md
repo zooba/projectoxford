@@ -1,7 +1,7 @@
 projectoxford
 =============
 
-Python client library for [Project Oxford](https://projectoxford.ai/) APIs.
+Python client library for [Project Oxford](https://www.projectoxford.ai/) APIs.
 
 Microsoft Project Oxford is a collection of artificial intelligence tools made available as online services. This library provides easy use of the Project Oxford APIs from Python.
 
@@ -29,7 +29,7 @@ This library is in an early stage of development. We strongly recommend pinning 
 ## Speech API
 ---------------
 
-To use text to speech or speech recognition, you'll need to [obtain a subscription key](https://projectoxford.ai/speech).
+To use text to speech or speech recognition, you'll need to [obtain a subscription key](https://www.projectoxford.ai/speech).
 
 ```python
 from projectoxford.speech import SpeechClient
