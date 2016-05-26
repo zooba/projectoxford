@@ -1,14 +1,14 @@
 #-------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation 
-# All rights reserved. 
-# 
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
 # Distributed under the terms of the MIT License
 #-------------------------------------------------------------------------
 '''Project Oxford Speech Module
 
 This module provides access to the Project Oxford speech APIs.
 
-See https://projectoxford.ai/speech to obtain an API key.
+See https://www.projectoxford.ai/speech to obtain an API key.
 '''
 
 import base64
@@ -137,7 +137,7 @@ class SpeechClient(object):
 
     key:
         The API key for your subscription. Visit
-        https://projectoxford.ai/speech to obtain one.
+        https://www.projectoxford.ai/speech to obtain one.
     locale:
         The locale for both voice and speech recognition. This value
         can be overridden on individual calls to `say`.
@@ -345,7 +345,7 @@ class SpeechClient(object):
     def recognize_raw(self, wav, locale=None):
         '''Converts a wave file to text, and returns the complete
         response JSON as a dictionary from the server.
-        
+
         See https://www.projectoxford.ai/doc/speech/REST/Recognition#VoiceRecognitionResponses
         for the schema of the response.
 
