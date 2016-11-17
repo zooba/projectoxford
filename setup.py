@@ -40,7 +40,7 @@ setup_cfg = dict(
     author='Microsoft Corporation',
     author_email='python@microsoft.com',
     url='http://github.com/zooba/projectoxford',
-    packages=['projectoxford', 'projectoxford.emotion', 'projectoxford.tests'],
+    packages=['projectoxford', 'projectoxford.tests'],
     ext_modules=cythonize('projectoxford/_audio_win32.pyx') if platform.system()=='Windows' else None,
     install_requires=['requests'],
     classifiers=classifiers,
