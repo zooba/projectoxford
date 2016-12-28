@@ -5,11 +5,16 @@
 # Distributed under the terms of the MIT License
 #-------------------------------------------------------------------------
 import os
-import platform
+import re
 import setuptools
 
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
+
+__author__ = 'Microsoft Corporation <python@microsoft.com>'
+__version__ = '0.3.2'
+
+AUTHOR_RE = re.match(r'(.+?)\s*\<(.+?)\>', __author__)
 
 with open('README', 'r', encoding='utf-8') as f:
     long_description = f.read()
@@ -34,14 +39,14 @@ classifiers = [
 
 setup_cfg = dict(
     name='projectoxford',
-    version='0.3.2',
+    version=__version__,
     description='Python module for using Project Oxford APIs',
     long_description=long_description,
-    author='Microsoft Corporation',
-    author_email='python@microsoft.com',
+    author=AUTHOR_RE.group(1),
+    author_email=AUTHOR_RE.group(2),
     url='http://github.com/zooba/projectoxford',
     packages=['projectoxford', 'projectoxford.tests'],
-    ext_modules=cythonize('projectoxford/_audio_win32.pyx') if platform.system()=='Windows' else None,
+    ext_modules=cythonize('projectoxford/_audio_win32.pyx') if sys.platform.startswith('win') else None,
     install_requires=['requests'],
     classifiers=classifiers,
 )
