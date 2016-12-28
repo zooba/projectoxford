@@ -7,6 +7,7 @@
 import os
 import re
 import setuptools
+import sys
 
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
